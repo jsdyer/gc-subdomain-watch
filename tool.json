@@ -1,16 +1,48 @@
 {
-  "id": "coolcode-tool-template",
-  "title": "CoolCode Tool Starter",
-  "description": "A browser-only example that trims lines and removes exact duplicates.",
-  "category": "security",
-  "tags": ["text", "lines", "duplicates"],
-  "icon": "scan-search",
-  "url": "/coolcode-tool-template/",
-  "source": "https://github.com/jsdyer/coolcode-tool-template",
+  "id": "gc-subdomain-watch",
+  "title": "GC Subdomain Watch",
+  "description": "Compare the official web addresses of Canadian institutions across dated federal directories.",
+  "category": "liminal-tools",
+  "tags": [
+    "Canada.ca",
+    "directory",
+    "certificates",
+    "RSS",
+    "domains"
+  ],
+  "icon": "history",
+  "url": "/gc-subdomain-watch/",
+  "source": "https://github.com/jsdyer/gc-subdomain-watch",
   "hosting": "project",
   "access": "browser",
   "data_info": {
-    "mode": "local",
-    "detail": "The browser reads the text you paste and compares its lines."
+    "mode": "snapshot",
+    "detail": "Archived and current Canada.ca directories supply institutional links. Cert Spotter supplies certificate summaries for four named public homepages.",
+    "cadence": "Daily",
+    "probes": [
+      {
+        "url": "https://coolcode.ca/gc-subdomain-watch/data.json",
+        "path": [
+          "retrieved"
+        ],
+        "label": "Source retrieved",
+        "count_at": {
+          "path": [
+            "count"
+          ],
+          "unit": "directory entries"
+        }
+      },
+      {
+        "url": "https://coolcode.ca/gc-subdomain-watch/data.json",
+        "path": [
+          "first"
+        ],
+        "end_path": [
+          "latest_change"
+        ],
+        "label": "Saved editions"
+      }
+    ]
   }
 }

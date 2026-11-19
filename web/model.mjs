@@ -1,7 +1,13 @@
-// Keep transformations separate from the DOM so they can be tested directly.
-export function cleanLines(text) {
-  if (typeof text !== 'string') throw new TypeError('Expected text');
-  const lines = text.split(/\r\n|\r|\n/).map(line => line.trim()).filter(Boolean);
-  const unique = [...new Set(lines)];
-  return { text: unique.join('\n'), count: unique.length, removed: lines.length - unique.length };
+export function compare(earlier,later) {
+  return [...new Set([...Object.keys(earlier),...Object.keys(later)])].sort((a,b)=>a.localeCompare(b,'en-CA')).map(name=>{
+    const old=earlier[name]??'', current=later[name]??'';
+    const state=!old?'Added':!current?'Removed':old===current?'Unchanged':'Destination changed';
+    const hostChanged=Boolean(old&&current&&new URL(old).hostname!==new URL(current).hostname);
+    return {name,old,current,state,hostChanged};
+  });
+}
+export function selection(rows,mode,query) {
+  const text=query.trim().toLowerCase();
+  return rows.filter(r=>(mode==='All'||mode==='Changes'&&r.state!=='Unchanged'||r.state===mode||mode==='Hostname changed'&&r.hostChanged) &&
+    [r.name,r.old,r.current].some(s=>s.toLowerCase().includes(text)));
 }

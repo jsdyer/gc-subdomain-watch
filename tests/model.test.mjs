@@ -1,21 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanLines } from '../web/model.mjs';
-test('trims, removes blanks and preserves first-seen order', () => {
-  assert.deepEqual(cleanLines('  Halifax\nLangley\nHalifax\n\nVancouver  '), {
-    text: 'Halifax\nLangley\nVancouver', count: 3, removed: 1,
-  });
+import {compare,selection} from '../web/model.mjs';
+test('Changed paths, removals, additions and stable links have separate meanings',()=>{
+ const r=compare({One:'https://a.ca/a',Two:'https://b.ca',Four:'https://z.ca'},{One:'https://a.ca/b',Three:'https://c.ca',Four:'https://z.ca'});
+ assert.deepEqual(r.map(x=>x.state),['Unchanged','Destination changed','Added','Removed']);
+ assert.equal(selection(r,'Changes','a.ca/a').length,1);assert.equal(selection(r,'All','').length,4);
 });
-test('supports Windows and old Mac line endings', () => {
-  assert.equal(cleanLines('a\r\nb\ra').text, 'a\nb');
-});
-test('empty text and whitespace produce an empty result', () => {
-  assert.deepEqual(cleanLines(' \n\t'), { text: '', count: 0, removed: 0 });
-});
-test('preserves case and Unicode', () => {
-  assert.equal(cleanLines('Québec\nquébec\n東京\nQuébec').text, 'Québec\nquébec\n東京');
-});
-test('treats markup as ordinary text', () => {
-  assert.equal(cleanLines('<script>alert(1)</script>\n<script>alert(1)</script>').text, '<script>alert(1)</script>');
-});
-test('rejects non-text input', () => { assert.throws(() => cleanLines(null), TypeError); });
