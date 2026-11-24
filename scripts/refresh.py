@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import re
 from urllib.parse import urljoin, urlsplit, urlencode
-from urllib.request import Request, urlopen
+from public_download import download_bytes
 
 ROOT = Path(__file__).resolve().parents[1]
 DIRECTORY = 'https://www.canada.ca/en/government/dept.html'
@@ -16,9 +16,8 @@ HOMES = ['www.canada.ca', 'www2.gov.bc.ca', 'www.novascotia.ca', 'www.halifax.ca
 DATA = ROOT / 'web/data.json'
 
 def read(url):
-    with urlopen(Request(url, headers={'User-Agent':'CoolCode public web directory history'}), timeout=35) as response:
-        raw=response.read()
-        return gzip.decompress(raw) if raw.startswith(b'\x1f\x8b') else raw
+    raw = download_bytes(url, limit=5_000_000, timeout=60)
+    return gzip.decompress(raw) if raw.startswith(b'\x1f\x8b') else raw
 
 def now():
     return datetime.now(timezone.utc).date().isoformat()

@@ -19,7 +19,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          persist-credentials: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+          fetch-depth: 0
+          persist-credentials: ${{ github.event_name != 'pull_request' }}
+      - name: Detect collection changes
+        id: source_changes
+        if: github.event_name == 'push'
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null ||
+             ! git diff --quiet "$BEFORE" "$GITHUB_SHA" -- scripts/refresh.py scripts/collect.py scripts/source.py scripts/public_download.py tests/browser_smoke.py .github/workflows/pages.yml; then
+            echo "refresh=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -27,7 +38,7 @@ jobs:
         with:
           node-version: '24'
       - name: Check public sources
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || steps.source_changes.outputs.refresh == 'true'
         run: python scripts/refresh.py
       - name: Test the application
         run: node --test tests/*.test.mjs
@@ -54,7 +65,7 @@ jobs:
       - name: Check application in a browser
         run: python3 tests/browser_smoke.py
       - name: Save the checked edition
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || steps.source_changes.outputs.refresh == 'true')
         run: |
           git add web/data.json web/changes.xml
           if ! git diff --cached --quiet; then
